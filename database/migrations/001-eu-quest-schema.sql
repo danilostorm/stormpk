@@ -33,25 +33,25 @@ BEGIN TRY
     IF COL_LENGTH(N'dbo.QuestList',N'QuestBookName') IS NULL
     BEGIN
         ALTER TABLE dbo.QuestList ADD QuestBookName varchar(64) NULL;
-        UPDATE dbo.QuestList SET QuestBookName = LEFT(COALESCE(Name,''),64);
+        EXEC sys.sp_executesql N'UPDATE dbo.QuestList SET QuestBookName = LEFT(COALESCE(Name,'''') ,64)';
     END;
 
     IF COL_LENGTH(N'dbo.QuestList',N'QuestBookStartText') IS NULL
     BEGIN
         ALTER TABLE dbo.QuestList ADD QuestBookStartText varchar(2048) NULL;
-        UPDATE dbo.QuestList SET QuestBookStartText = LEFT(COALESCE(Description,''),2048);
+        EXEC sys.sp_executesql N'UPDATE dbo.QuestList SET QuestBookStartText = LEFT(COALESCE(Description,'''') ,2048)';
     END;
 
     IF COL_LENGTH(N'dbo.QuestList',N'QuestBookTipText') IS NULL
     BEGIN
         ALTER TABLE dbo.QuestList ADD QuestBookTipText varchar(2048) NULL;
-        UPDATE dbo.QuestList SET QuestBookTipText = LEFT(COALESCE(ProgressText,''),2048);
+        EXEC sys.sp_executesql N'UPDATE dbo.QuestList SET QuestBookTipText = LEFT(COALESCE(ProgressText,'''') ,2048)';
     END;
 
     IF COL_LENGTH(N'dbo.QuestList',N'QuestBookEndText') IS NULL
     BEGIN
         ALTER TABLE dbo.QuestList ADD QuestBookEndText varchar(2048) NULL;
-        UPDATE dbo.QuestList SET QuestBookEndText = LEFT(COALESCE(ConclusionText,''),2048);
+        EXEC sys.sp_executesql N'UPDATE dbo.QuestList SET QuestBookEndText = LEFT(COALESCE(ConclusionText,'''') ,2048)';
     END;
 
     IF COL_LENGTH(N'dbo.QuestList',N'QuestBookGroupID') IS NULL
