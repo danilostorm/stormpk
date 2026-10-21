@@ -27,6 +27,9 @@ enum ESystemLanguage
 	SYSTEMLANGUAGE_ChineseSimplified,
 	SYSTEMLANGUAGE_Japanese,
 	SYSTEMLANGUAGE_Thai,
+	// Keep the existing enum values stable; this is an opt-in language ID,
+	// not an assertion that all the game resources are translated yet.
+	SYSTEMLANGUAGE_PortugueseBrazil,
 };
 
 #define NT_SUCCESS(x) ((x) >= 0)
