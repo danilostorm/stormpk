@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #define STORMPK_REQUIRE_LAUNCH_PROOF 1
 #include "GameCore.h"
+#include <ShellAPI.h>
 #include "picosha2.h"
 GameCore										* pGameCoreHandler = NULL;
 
@@ -426,6 +427,28 @@ GameCore * GameCore::GetInstance()
 
 void GameCore::Init()
 {
+#ifdef STORMPK_REQUIRE_LAUNCH_PROOF
+    // A direct Game.exe launch is redirected to the official launcher.
+    // The Login Server independently validates its one-time launch ticket.
+    char launchProof[25] = {};
+    if (GetEnvironmentVariableA("STORMPK_LAUNCH_PROOF", launchProof, sizeof(launchProof)) != 24)
+    {
+        char exePath[MAX_PATH] = {};
+        if (GetModuleFileNameA(NULL, exePath, MAX_PATH))
+        {
+            char* name = strrchr(exePath, '\\');
+            if (name)
+            {
+                strcpy_s(name + 1, MAX_PATH - (name + 1 - exePath), "StormPKLauncher.exe");
+                HINSTANCE status = ShellExecuteA(NULL, "open", exePath, NULL, NULL, SW_SHOWNORMAL);
+                if ((INT_PTR)status <= 32)
+                    MessageBoxA(NULL, "Abra o StormPK pelo launcher oficial. Baixe-o no site StormPK.", "StormPK", MB_OK | MB_ICONWARNING);
+            }
+        }
+        ExitProcess(0);
+    }
+    SecureZeroMemory(launchProof, sizeof(launchProof));
+#endif
 	INIT( pcItemTimerHandler );
 	INIT( pcSettingsHandler );
 	INIT( pcAgingWindowHandler );
