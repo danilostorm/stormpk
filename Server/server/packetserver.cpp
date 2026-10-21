@@ -24,7 +24,7 @@ static bool ConsumeStormPKLaunchProof( const DWORD (&proof)[3] )
 	SQLConnection* db = SQLCONNECTION( DATABASEID_ServerDB, 16 );
 	if (!db || !db->Open()) return false;
 	bool accepted = false;
-	if (db->Prepare("DELETE FROM dbo.StormPKLauncherTickets OUTPUT DELETED.TokenHash WHERE TokenHash=HASHBYTES('SHA2_256', CONVERT(varchar(24), ?)) AND ExpiresAt > SYSUTCDATETIME()"))
+	if (db->Prepare("EXEC dbo.StormPK_ConsumeLauncherTicket ?"))
 	{
 		db->BindParameterInput(1, PARAMTYPE_String, token);
 		accepted = db->Execute() && db->Fetch();
