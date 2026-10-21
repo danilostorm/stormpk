@@ -13,7 +13,8 @@ CSystem::CSystem()
 
 	GetSystemInfo( (LPSYSTEM_INFO)&sys_info );
 
-	lang_id = GetUserDefaultLangID();
+	// Prefer Windows UI language over number/date regional settings.
+	lang_id = GetUserDefaultUILanguage();
 }
 
 ESystemOS CSystem::GetSystemOS()
@@ -80,8 +81,24 @@ ESystemOS CSystem::GetSystemOS()
 
 ESystemLanguage CSystem::GetSystemLanguage()
 {
+	// The launcher may explicitly override the automatic selection in a future
+	// update. Do not add translated UI strings before the assets exist.
+	char szRequestedLanguage[16] = { 0 };
+	DWORD dwLanguageLength = GetEnvironmentVariableA( "STORMPK_LANGUAGE", szRequestedLanguage, sizeof( szRequestedLanguage ) );
+	if ( dwLanguageLength > 0 && dwLanguageLength < sizeof( szRequestedLanguage ) )
+	{
+		if ( _stricmp( szRequestedLanguage, "pt-BR" ) == 0 ||
+			_stricmp( szRequestedLanguage, "pt_BR" ) == 0 )
+			return SYSTEMLANGUAGE_PortugueseBrazil;
+		if ( _stricmp( szRequestedLanguage, "en-US" ) == 0 ||
+			_stricmp( szRequestedLanguage, "en" ) == 0 )
+			return SYSTEMLANGUAGE_English;
+	}
+
 	switch( lang_id )
 	{
+	case 0x0416:
+		return SYSTEMLANGUAGE_PortugueseBrazil;
 	case 0x0412:
 		return SYSTEMLANGUAGE_Korean;
 	case 0x0C04:
