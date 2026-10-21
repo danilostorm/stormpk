@@ -8,7 +8,7 @@ on:
       - 'shared/**'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   windows-cpp:
     runs-on: windows-2022
@@ -47,6 +47,20 @@ jobs:
             game/bin/**/*.dll
           if-no-files-found: error
           retention-days: 15
+      - name: Stage CI binaries for temporary Windows VM validation
+        if: github.ref == 'refs/heads/feature/stormpk-launcher-ticket'
+        shell: pwsh
+        run: |
+          git config user.name 'stormpk-build[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout --orphan ci/stormpk-gate-stage
+          git rm -r --cached . | Out-Null
+          New-Item -ItemType Directory -Force -Path ci-artifacts | Out-Null
+          Copy-Item Server/server/Release/server.dll ci-artifacts/server.dll -Force
+          Copy-Item game/bin/Game/game.dll ci-artifacts/game.dll -Force
+          git add -f ci-artifacts/server.dll ci-artifacts/game.dll
+          git commit -m 'Temporary staging binaries for StormPK VM tests'
+          git push --force origin HEAD:refs/heads/ci/stormpk-gate-stage
       - name: Upload build logs on failure
         if: failure()
         uses: actions/upload-artifact@v4
