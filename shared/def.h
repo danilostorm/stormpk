@@ -3,7 +3,7 @@
 
 //#define DEV_MODE 			
 #define GAME_VERSION		1309
-#define GAME_NAME			"Priston Tale - Testing"
+#define GAME_NAME			"StormPK"
 #define GAME_XOR			((((unsigned)(GAME_VERSION) * 519u * 16510u * 14u + 595u) % 180u) + 20u)
 
 
