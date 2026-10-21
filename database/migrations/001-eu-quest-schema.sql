@@ -71,7 +71,6 @@ BEGIN CATCH
     THROW;
 END CATCH;
 
-SELECT COUNT(*) AS QuestRows,
-       COUNT(QuestBookName) AS QuestBookTitles,
-       COUNT(QuestBookStartText) AS QuestBookStartTexts
-FROM dbo.QuestList;
+EXEC sys.sp_executesql
+    N'SELECT COUNT(*) AS QuestRows, COUNT(QuestBookName) AS QuestBookTitles,
+      COUNT(QuestBookStartText) AS QuestBookStartTexts FROM dbo.QuestList';
