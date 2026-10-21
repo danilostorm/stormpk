@@ -1,0 +1,37 @@
+name: Restore tracked upstream build dependencies
+on:
+  push:
+    paths:
+      - '.github/workflows/restore-eu-deps.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Restore only upstream git-tracked files omitted by gitignore
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 https://github.com/dwSize-PE/PristonTale-EU-main.git /tmp/pt-upstream
+          git -C /tmp/pt-upstream rev-parse --short HEAD
+          count=0
+          while IFS= read -r -d '' file; do
+            if ! git ls-files --error-unmatch "$file" >/dev/null 2>&1; then
+              mkdir -p "$(dirname "$file")"
+              cp -- "/tmp/pt-upstream/$file" "$file"
+              git add -f -- "$file"
+              count=$((count + 1))
+            fi
+          done < <(git -C /tmp/pt-upstream ls-files -z)
+          echo "Restored original upstream tracked paths: $count"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if ! git diff --cached --quiet; then
+            git commit -m 'Restore ignored original Windows SDK and binary dependency files'
+            git push origin HEAD:main
+          fi
