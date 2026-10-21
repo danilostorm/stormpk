@@ -26,13 +26,13 @@ jobs:
         shell: pwsh
         run: |
           $msbuild = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\MSBuild.exe' | Select-Object -First 1
-          & $msbuild 'Server/server/server.vcxproj' '/t:Build' '/p:Configuration=Release' '/p:Platform=Win32' '/p:PlatformToolset=v143' '/m:2' '/v:minimal' '/flp:logfile=server-build.log;verbosity=normal'
+          & $msbuild 'Server/server/server.vcxproj' '/t:Build' '/p:Configuration=Release' '/p:Platform=Win32' '/p:PlatformToolset=v143' '/p:PostBuildEventUseInBuild=false' '/m:2' '/v:minimal' '/flp:logfile=server-build.log;verbosity=normal'
           if ($LASTEXITCODE -ne 0) { throw "Server C++ build failed" }
       - name: Build game DLL 32-bit Release
         shell: pwsh
         run: |
           $msbuild = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\MSBuild.exe' | Select-Object -First 1
-          & $msbuild 'game/game/game.vcxproj' '/t:Build' '/p:Configuration=Release' '/p:Platform=Win32' '/p:PlatformToolset=v143' '/m:2' '/v:minimal' '/flp:logfile=game-build.log;verbosity=normal'
+          & $msbuild 'game/game/game.vcxproj' '/t:Build' '/p:Configuration=Release' '/p:Platform=Win32' '/p:PlatformToolset=v143' '/p:PostBuildEventUseInBuild=false' '/m:2' '/v:minimal' '/flp:logfile=game-build.log;verbosity=normal'
           if ($LASTEXITCODE -ne 0) { throw "Client C++ build failed" }
       - name: Upload Windows libraries
         if: success()
