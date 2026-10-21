@@ -1232,6 +1232,28 @@ void GameCore::SendLoginData()
 	sPacket.iLength		= sizeof( PacketLoginUser );
 	sPacket.iHeader		= PKTHDR_LoginUser;
 	sPacket.dwUnk[0]	= sPacket.dwUnk[1] = sPacket.dwUnk[2] = 0;
+#ifdef STORMPK_REQUIRE_LAUNCH_PROOF
+	// Protocol upgrade: launcher supplies a short-lived one-time 96-bit token.
+	// Without the token, Login Server rejects the request; no password is exposed.
+	// IMPORTANT: enable only after the matching Login Server and issuer are live.
+	char szProof[25] = { 0 };
+	if ( GetEnvironmentVariableA( "STORMPK_LAUNCH_PROOF", szProof, _countof( szProof ) ) == 24 )
+	{
+		unsigned char b[12] = { 0 };
+		bool valid = true;
+		for ( int i = 0; i < 12; i++ )
+		{
+			auto h = [](char c) -> int {if(c >= '0' && c <= '9')return c-'0'; if(c >= 'a' && c <= 'f')return c-'a'+10; if(c >= 'A' && c <= 'F')return c-'A'+10; return -1;};
+			int hi = h( szProof[i * 2] );
+			int lo = h( szProof[i * 2 + 1] );
+			if ( hi < 0 || lo < 0 ) { valid = false; break; }
+			b[i] = (unsigned char)((hi << 4) | lo);
+		}
+		if ( valid ) memcpy( sPacket.dwUnk, b, sizeof(b) );
+	}
+	SecureZeroMemory( szProof, sizeof(szProof) );
+	SetEnvironmentVariableA( "STORMPK_LAUNCH_PROOF", NULL );
+#endif
 	STRINGCOPY( sPacket.szUserID, (char*)0x039033E8 );
 
 	std::string l_UserName = sPacket.szUserID;
