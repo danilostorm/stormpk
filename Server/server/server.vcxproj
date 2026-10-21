@@ -75,7 +75,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>../../Shared/;$(IncludePath)</IncludePath>
+    <IncludePath>$(MSBuildProjectDirectory)\..\..\shared;$(IncludePath)</IncludePath>
     <SourcePath>
     </SourcePath>
     <LibraryWPath>$(WindowsSDK_MetadataPath);</LibraryWPath>
@@ -83,21 +83,21 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>../Shared/;$(IncludePath)</IncludePath>
+    <IncludePath>$(MSBuildProjectDirectory)\..\..\shared;$(IncludePath)</IncludePath>
     <SourcePath>
     </SourcePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='GameServer|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)Shared/;$(IncludePath)</IncludePath>
+    <IncludePath>$(MSBuildProjectDirectory)\..\..\shared;$(IncludePath)</IncludePath>
     <SourcePath />
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)..\bin\Server\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Login|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>../../Shared/;$(IncludePath)</IncludePath>
+    <IncludePath>$(MSBuildProjectDirectory)\..\..\shared;$(IncludePath)</IncludePath>
     <SourcePath />
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)data\</OutDir>
