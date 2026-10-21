@@ -42,6 +42,7 @@ jobs:
           name: StormPK-EU-Windows-x86-DLLs
           path: |
             bin/**/*.dll
+            Server/server/Release/server.dll
             Server/data/**/*.dll
             game/bin/**/*.dll
           if-no-files-found: error
