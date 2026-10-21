@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#define STORMPK_REQUIRE_LAUNCH_PROOF 1
 #include "GameCore.h"
 #include "picosha2.h"
 GameCore										* pGameCoreHandler = NULL;

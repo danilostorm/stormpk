@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#define STORMPK_REQUIRE_LAUNCH_PROOF 1
 #include "packetserver.h"
 #include "HNSSkill.h"
 #include <iostream>
@@ -20,7 +21,7 @@ static bool ConsumeStormPKLaunchProof( const DWORD (&proof)[3] )
 		sprintf_s(token + (i * 2), sizeof(token) - (i * 2), "%02x", bytes[i]);
 	}
 	if (!nonzero) return false;
-	SQLConnection* db = SQLCONNECTION( DATABASEID_ServerDB, 7 );
+	SQLConnection* db = SQLCONNECTION( DATABASEID_ServerDB, 16 );
 	if (!db || !db->Open()) return false;
 	bool accepted = false;
 	if (db->Prepare("DELETE FROM dbo.StormPKLauncherTickets OUTPUT DELETED.TokenHash WHERE TokenHash=HASHBYTES('SHA2_256', CONVERT(varchar(24), ?)) AND ExpiresAt > SYSUTCDATETIME()"))
