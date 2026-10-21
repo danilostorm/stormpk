@@ -22,6 +22,7 @@ jobs:
           & $vswhere -latest -products '*' -property installationPath
           $sdk = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\Include" -Directory | Select-Object -ExpandProperty Name
           Write-Host "Installed Windows SDKs: $($sdk -join ', ')"
+      # All source-tracked DirectX SDK .lib dependencies have now been restored.
       - name: Build server DLL 32-bit Release
         shell: pwsh
         run: |
