@@ -23,6 +23,16 @@ jobs:
           $sdk = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\Include" -Directory | Select-Object -ExpandProperty Name
           Write-Host "Installed Windows SDKs: $($sdk -join ', ')"
       # All source-tracked DirectX SDK .lib dependencies have now been restored.
+      - name: Configure external login address for Windows client build
+        shell: pwsh
+        run: |
+          $path='game/game/globals.h'
+          $text=[System.IO.File]::ReadAllText($path)
+          $before='#define IP_FORTRESS_MAIN'
+          if (-not $text.Contains($before)) { throw 'Missing IP_FORTRESS_MAIN define' }
+          $text=[regex]::Replace($text,'(?m)(#define IP_FORTRESS_MAIN\s+)"127\.0\.0\.1"','$1"163.176.128.81"')
+          if (-not $text.Contains('"163.176.128.81"')) { throw 'Login address substitution failed' }
+          [System.IO.File]::WriteAllText($path,$text)
       - name: Build server DLL 32-bit Release
         shell: pwsh
         run: |
