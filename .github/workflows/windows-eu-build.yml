@@ -1,0 +1,82 @@
+name: StormPK EU Windows C++ build
+on:
+  push:
+    paths:
+      - '.github/workflows/windows-eu-build.yml'
+      - 'Server/**'
+      - 'game/**'
+      - 'shared/**'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  windows-cpp:
+    runs-on: windows-2022
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Detect Visual Studio and Windows SDK
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          & $vswhere -latest -products '*' -property installationPath
+          $sdk = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\Include" -Directory | Select-Object -ExpandProperty Name
+          Write-Host "Installed Windows SDKs: $($sdk -join ', ')"
+      # All source-tracked DirectX SDK .lib dependencies have now been restored.
+      - name: Configure external login address for Windows client build
+        shell: pwsh
+        run: |
+          $path='game/game/globals.h'
+          $text=[System.IO.File]::ReadAllText($path)
+          $before='#define IP_FORTRESS_MAIN'
+          if (-not $text.Contains($before)) { throw 'Missing IP_FORTRESS_MAIN define' }
+          $text=[regex]::Replace($text,'(?m)(#define IP_FORTRESS_MAIN\s+)"127\.0\.0\.1"','$1"163.176.128.81"')
+          if (-not $text.Contains('"163.176.128.81"')) { throw 'Login address substitution failed' }
+          [System.IO.File]::WriteAllText($path,$text)
+      - name: Build server DLL 32-bit Release
+        shell: pwsh
+        run: |
+          $msbuild = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\MSBuild.exe' | Select-Object -First 1
+          & $msbuild 'Server/server/server.vcxproj' '/t:Build' '/p:Configuration=Release' '/p:Platform=Win32' '/p:PlatformToolset=v143' '/p:PostBuildEventUseInBuild=false' '/m:2' '/v:minimal' '/flp:logfile=server-build.log;verbosity=normal'
+          if ($LASTEXITCODE -ne 0) { throw "Server C++ build failed" }
+      - name: Build game DLL 32-bit Release
+        shell: pwsh
+        run: |
+          $msbuild = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\MSBuild.exe' | Select-Object -First 1
+          & $msbuild 'game/game/game.vcxproj' '/t:Build' '/p:Configuration=Release' '/p:Platform=Win32' '/p:PlatformToolset=v143' '/p:PostBuildEventUseInBuild=false' '/m:2' '/v:minimal' '/flp:logfile=game-build.log;verbosity=normal'
+          if ($LASTEXITCODE -ne 0) { throw "Client C++ build failed" }
+      - name: Upload Windows libraries
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StormPK-EU-Windows-x86-DLLs
+          path: |
+            bin/**/*.dll
+            Server/server/Release/server.dll
+            Server/data/**/*.dll
+            game/bin/**/*.dll
+          if-no-files-found: error
+          retention-days: 15
+      - name: Stage CI binaries for temporary Windows VM validation
+        if: github.ref == 'refs/heads/feature/stormpk-launcher-ticket'
+        shell: pwsh
+        run: |
+          git config user.name 'stormpk-build[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout --orphan ci/stormpk-gate-stage
+          git rm -r --cached . | Out-Null
+          New-Item -ItemType Directory -Force -Path ci-artifacts | Out-Null
+          Copy-Item Server/server/Release/server.dll ci-artifacts/server.dll -Force
+          Copy-Item game/bin/Game/game.dll ci-artifacts/game.dll -Force
+          git add -f ci-artifacts/server.dll ci-artifacts/game.dll
+          git commit -m 'Temporary staging binaries for StormPK VM tests'
+          git push --force origin HEAD:refs/heads/ci/stormpk-gate-stage
+      - name: Upload build logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StormPK-EU-build-diagnostics
+          path: |
+            server-build.log
+            game-build.log
+          if-no-files-found: ignore
