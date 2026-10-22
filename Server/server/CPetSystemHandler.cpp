@@ -82,6 +82,8 @@ void CPetSystemHandler::HandlePacket(UserData* pcUserData)
 
 void CPetSystemHandler::CreatePet(UserData* pcUserData, int iPetSkin)
 {
+	if (!pcUserData || !pcUserData->sCharacterData.szName[0])
+		return;
 	SQLConnection* pcDB = SQLCONNECTION(DATABASEID_GameDB_PetSystem);
 	if (pcDB->Open())
 	{
@@ -108,9 +110,11 @@ void CPetSystemHandler::CreatePet(UserData* pcUserData, int iPetSkin)
 
 void CPetSystemHandler::SpawnPet(UserData* pcUserData)
 {
+	if (!pcUserData)
+		return;
 	if (!CheckPremiumActive(pcUserData))
 		return;
-	if (InvalidMapSpawn(pcUserData) || pcUserData == nullptr)
+	if (InvalidMapSpawn(pcUserData))
 		return;
 	if (pcUserData->dwObjectPetSystemID)
 		return;
@@ -200,7 +204,7 @@ void CPetSystemHandler::CheckPetRespawn(UserData* pcUserData)
 
 void CPetSystemHandler::RemovePet(UserData* pcUserData)
 {
-	if (!pcUserData || !pcUserData->pcPetSystem && GAME_SERVER)
+	if (!pcUserData || !pcUserData->pcPetSystem)
 		return;
 	UnitData* pcUnitData = pcUserData->pcPetSystem;
 
@@ -215,7 +219,8 @@ void CPetSystemHandler::RemovePet(UserData* pcUserData)
 
 void CPetSystemHandler::ChangePetName(UserData* pcUserData, char* szNewPetName)
 {
-	if (pcUserData && !pcUserData->szAccountName[0] && STRLEN(szNewPetName) <= 32)
+	if (pcUserData && pcUserData->szAccountName[0] && szNewPetName &&
+		STRLEN(szNewPetName) > 0 && STRLEN(szNewPetName) < 32)
 	{
 		char szUserID[32] = { 0 };
 		ZeroMemory(szUserID, 32);
@@ -225,7 +230,7 @@ void CPetSystemHandler::ChangePetName(UserData* pcUserData, char* szNewPetName)
 		SQLConnection* pcDB = SQLCONNECTION(DATABASEID_GameDB_PetSystem);
 		if (pcDB->Open())
 		{
-			if (pcDB->Prepare("UPDATE PetSystem SET [PetSystemName] = ? WHERE Name=?"))
+			if (pcDB->Prepare("UPDATE PetSystem SET [PetName] = ? WHERE PetOwnerName=?"))
 			{
 				pcDB->BindParameterInput(1, PARAMTYPE_String, szNewPetName, 32);
 				pcDB->BindParameterInput(2, PARAMTYPE_String, pszCharName, 32);
