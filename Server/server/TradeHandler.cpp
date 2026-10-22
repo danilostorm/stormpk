@@ -13,10 +13,14 @@ CTradeHandler::~CTradeHandler()
 
 void CTradeHandler::HandlePacket( User * pcUser, PacketTradeData * psPacket )
 {
+	/// Discard unsolicited trade packets. Only an accepted trade request
+	/// may open a trade session; uninvited data must not kick players.
+	if (!pcUser || !pcUser->pcUserData || !pcUser->TradeWindowOpen)
+	{
+		WARN("[TRADE] Ignoring trade data outside an accepted trade session");
+		return;
+	}
 	/// Disable COIN TRADING
-
-
-	pcUser->TradeWindowOpen = true;
 	//std::cout << "PacketTradeData TradeWindowOpen true" << std::endl;
 
 	TradeDataItem sData;

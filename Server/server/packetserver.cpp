@@ -1,9 +1,40 @@
 #include "stdafx.h"
+// Ticket de lançamento removido a pedido da administração do StormPK.
+// Login do jogo continua autenticado por conta e senha.
 #include "packetserver.h"
 #include "HNSSkill.h"
 #include <iostream>
 #include <CStable.h>
 
+
+#ifdef STORMPK_REQUIRE_LAUNCH_PROOF
+// The 96-bit token is random, server-issued, one-time and short-lived. A single
+// DELETE ... OUTPUT atomically consumes it to prevent replay under concurrency.
+// NOTE: needs dbo.StormPKLauncherTickets in ServerDB and a restricted issuer API.
+static bool ConsumeStormPKLaunchProof( const DWORD (&proof)[3] )
+{
+	const unsigned char* bytes = reinterpret_cast<const unsigned char*>( proof );
+	char token[25] = { 0 };
+	bool nonzero = false;
+	for ( int i = 0; i < 12; ++i )
+	{
+		if (bytes[i] != 0) nonzero = true;
+		sprintf_s(token + (i * 2), sizeof(token) - (i * 2), "%02x", bytes[i]);
+	}
+	if (!nonzero) return false;
+	SQLConnection* db = SQLCONNECTION( DATABASEID_ServerDB, 16 );
+	if (!db || !db->Open()) return false;
+	bool accepted = false;
+	if (db->Prepare("EXEC dbo.StormPK_ConsumeLauncherTicket ?"))
+	{
+		db->BindParameterInput(1, PARAMTYPE_String, token);
+		accepted = db->Execute() && db->Fetch();
+	}
+	db->Close();
+	SecureZeroMemory(token,sizeof(token));
+	return accepted;
+}
+#endif
 
 CRITICAL_SECTION CriticalSectionPacketSend;
 BOOL bPacketCritical = FALSE;
@@ -225,6 +256,19 @@ BOOL PacketServer::AnalyzePacket( User * pcUser, PacketReceiving * p )
 			}
 			else
 			{
+#ifdef STORMPK_REQUIRE_LAUNCH_PROOF
+				if ( !ConsumeStormPKLaunchProof( p->dwUnk ) )
+				{
+					PacketAccountLoginCode reject = {};
+					reject.iLength = sizeof(reject);
+					reject.iHeader = PKTHDR_AccountLoginCode;
+					reject.iCode = ACCOUNTLOGIN_WrongVersion;
+					reject.iFailCode = 1;
+					strcpy_s( reject.szMessage, "Inicie o StormPK pelo launcher atualizado" );
+					SENDPACKET(pcUser, &reject, TRUE);
+					break;
+				}
+#endif
 				ACCOUNTSERVER->PHAccountLogin( pcUser, p );
 				WRITEDWORD( 0x07AC9D80, READDWORD( 0x07AC9D80 ) + 1 );
 				CHEATSERVER->OnLoginUserPacket( pcUserData );
