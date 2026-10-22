@@ -1,5 +1,6 @@
 #include "stdafx.h"
-#define STORMPK_REQUIRE_LAUNCH_PROOF 1
+// Ticket de lançamento removido a pedido da administração do StormPK.
+// Login do jogo continua autenticado por conta e senha.
 #include "packetserver.h"
 #include "HNSSkill.h"
 #include <iostream>
